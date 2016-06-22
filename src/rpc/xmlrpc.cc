@@ -526,7 +526,7 @@ XmlRpc::cleanup() {
   delete (xmlrpc_env*)m_env;
 }
 
-static std::vector<std::string> untrusted_commands = 
+static std::vector<std::string> untrusted_commands =
 {
 	"execute",
 	"execute.capture",
@@ -547,17 +547,7 @@ static std::vector<std::string> untrusted_commands =
 	"schedule",
 	"schedule2",
 	"import",
-	"d.create_link",
-	"d.directory.set",
-	"session.path.set",
-	"d.directory_base.set",
-	"directory.default.set",
-// old commands	
-	"create_link",
-	"d.set_directory",
-	"d.set_directory_base",
-	"set_directory",
-	"set_session",
+// old commands
 	"execute_capture",
 	"execute_capture_nothrow",
 	"execute_nothrow",
@@ -567,11 +557,11 @@ static std::vector<std::string> untrusted_commands =
 	"execute_raw_nothrow",
 	"execute_raw_nothrow_bg",
 	"execute_throw",
-	"execute_throw_bg",	
+	"execute_throw_bg",
 	"system.method.insert",
 	"system.method.redirect",
 	"system.method.set",
-	"system.method.set_key",	
+	"system.method.set_key",
 	"on_insert",
 	"on_erase",
 	"on_open",
@@ -599,7 +589,7 @@ XmlRpc::process(const char* inBuffer, uint32_t length, slot_write slotWrite, boo
   xmlrpc_env_init(&localEnv);
 
   xmlrpc_registry_set_preinvoke_method(&localEnv, (xmlrpc_registry*)m_registry, 
-  	(xmlrpc_preinvoke_method) (trusted ? NULL : &xmlrpc_check_command), NULL);
+    (xmlrpc_preinvoke_method) (trusted ? NULL : &xmlrpc_check_command), NULL);
   xmlrpc_mem_block* memblock = xmlrpc_registry_process_call(&localEnv, (xmlrpc_registry*)m_registry, NULL, inBuffer, length);
 
   if (localEnv.fault_occurred && localEnv.fault_code == XMLRPC_INTERNAL_ERROR)
