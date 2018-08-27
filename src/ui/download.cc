@@ -54,6 +54,7 @@
 #include "display/window_download_statusbar.h"
 
 #include "display/text_element_string.h"
+#include "rpc/parse_commands.h"
 
 #include "control.h"
 #include "download.h"
@@ -194,7 +195,7 @@ Download::create_info() {
   element->push_column("Upload:",           te_command("cat=$convert.kb=$d.up.rate=,\" KB / \",$convert.xb=$d.up.total="));
   element->push_column("Download:",         te_command("cat=$convert.kb=$d.down.rate=,\" KB / \",$convert.xb=$d.down.total="));
   element->push_column("Skipped:",          te_command("cat=$convert.kb=$d.skip.rate=,\" KB / \",$convert.xb=$d.skip.total="));
-  element->push_column("Preload:",          te_command("cat=$pieces.preload.type=,\" / \",$pieces.stats_preloaded=,\" / \",$pieces.stats_preloaded="));
+  element->push_column("Preload:",          te_command("cat=$pieces.preload.type=,\" / \",$pieces.stats_preloaded=,\" / \",$pieces.stats_not_preloaded="));
 
   element->set_column_width(element->column_width() + 1);
 
@@ -395,20 +396,20 @@ Download::bind_keys() {
 
   const char* keys = control->ui()->get_throttle_keys();
 
-  m_bindings[keys[ 0]] = std::bind(&Download::adjust_up_throttle, this, 1);
-  m_bindings[keys[ 1]] = std::bind(&Download::adjust_up_throttle, this, -1);
-  m_bindings[keys[ 2]] = std::bind(&Download::adjust_down_throttle, this, 1);
-  m_bindings[keys[ 3]] = std::bind(&Download::adjust_down_throttle, this, -1);
+  m_bindings[keys[ 0]] = std::bind(&Download::adjust_up_throttle, this, (int) rpc::call_command_value("ui.throttle.global.step.small"));
+  m_bindings[keys[ 1]] = std::bind(&Download::adjust_up_throttle, this, (int) -rpc::call_command_value("ui.throttle.global.step.small"));
+  m_bindings[keys[ 2]] = std::bind(&Download::adjust_down_throttle, this, (int) rpc::call_command_value("ui.throttle.global.step.small"));
+  m_bindings[keys[ 3]] = std::bind(&Download::adjust_down_throttle, this, (int) -rpc::call_command_value("ui.throttle.global.step.small"));
 
-  m_bindings[keys[ 4]] = std::bind(&Download::adjust_up_throttle, this, 5);
-  m_bindings[keys[ 5]] = std::bind(&Download::adjust_up_throttle, this, -5);
-  m_bindings[keys[ 6]] = std::bind(&Download::adjust_down_throttle, this, 5);
-  m_bindings[keys[ 7]] = std::bind(&Download::adjust_down_throttle, this, -5);
+  m_bindings[keys[ 4]] = std::bind(&Download::adjust_up_throttle, this, (int) rpc::call_command_value("ui.throttle.global.step.medium"));
+  m_bindings[keys[ 5]] = std::bind(&Download::adjust_up_throttle, this, (int) -rpc::call_command_value("ui.throttle.global.step.medium"));
+  m_bindings[keys[ 6]] = std::bind(&Download::adjust_down_throttle, this, (int) rpc::call_command_value("ui.throttle.global.step.medium"));
+  m_bindings[keys[ 7]] = std::bind(&Download::adjust_down_throttle, this, (int) -rpc::call_command_value("ui.throttle.global.step.medium"));
 
-  m_bindings[keys[ 8]] = std::bind(&Download::adjust_up_throttle, this, 50);
-  m_bindings[keys[ 9]] = std::bind(&Download::adjust_up_throttle, this, -50);
-  m_bindings[keys[10]] = std::bind(&Download::adjust_down_throttle, this, 50);
-  m_bindings[keys[11]] = std::bind(&Download::adjust_down_throttle, this, -50);
+  m_bindings[keys[ 8]] = std::bind(&Download::adjust_up_throttle, this, (int) rpc::call_command_value("ui.throttle.global.step.large"));
+  m_bindings[keys[ 9]] = std::bind(&Download::adjust_up_throttle, this, (int) -rpc::call_command_value("ui.throttle.global.step.large"));
+  m_bindings[keys[10]] = std::bind(&Download::adjust_down_throttle, this, (int) rpc::call_command_value("ui.throttle.global.step.large"));
+  m_bindings[keys[11]] = std::bind(&Download::adjust_down_throttle, this, (int) -rpc::call_command_value("ui.throttle.global.step.large"));
 }
 
 }

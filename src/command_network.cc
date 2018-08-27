@@ -167,17 +167,16 @@ apply_scgi(const std::string& arg, int type) {
         sa.sa_inet()->clear();
         saPtr = &sa;
 
-        lt_log_print(torrent::LOG_RPC_EVENTS,
-                     "The SCGI socket has not been bound to any address and likely poses a security risk.");
+        lt_log_print(torrent::LOG_RPC_EVENTS, "SCGI socket is open to any address and is a security risk");
 
-      } else if (std::sscanf(arg.c_str(), "%1023[^:]:%i%c", address, &port, &dummy) == 2) {
-        if ((err = rak::address_info::get_address_info(address, PF_INET, SOCK_STREAM, &ai)) != 0)
+      } else if (std::sscanf(arg.c_str(), "%1023[^:]:%i%c", address, &port, &dummy) == 2 ||
+                 std::sscanf(arg.c_str(), "[%64[^]]]:%i%c", address, &port, &dummy) == 2) { // [xx::xx]:port format
+        if ((err = rak::address_info::get_address_info(address,PF_UNSPEC, SOCK_STREAM, &ai)) != 0)
           throw torrent::input_error("Could not bind address: " + std::string(rak::address_info::strerror(err)) + ".");
 
         saPtr = ai->address();
 
-        lt_log_print(torrent::LOG_RPC_EVENTS,
-                     "The SCGI socket is bound to a specific network device yet may still pose a security risk, consider using 'scgi_local'.");
+        lt_log_print(torrent::LOG_RPC_EVENTS, "SCGI socket is bound to an address and might be a security risk");
 
       } else {
         throw torrent::input_error("Could not parse address.");
@@ -264,6 +263,7 @@ initialize_command_network() {
   CMD2_ANY_STRING_V("network.http.capath.set",            std::bind(&core::CurlStack::set_http_capath, httpStack, std::placeholders::_2));
   CMD2_ANY         ("network.http.dns_cache_timeout",     std::bind(&core::CurlStack::dns_timeout, httpStack));
   CMD2_ANY_VALUE_V ("network.http.dns_cache_timeout.set", std::bind(&core::CurlStack::set_dns_timeout, httpStack, std::placeholders::_2));
+  CMD2_ANY         ("network.http.current_open",                  std::bind(&core::CurlStack::active, httpStack));
   CMD2_ANY         ("network.http.max_open",              std::bind(&core::CurlStack::max_active, httpStack));
   CMD2_ANY_VALUE_V ("network.http.max_open.set",          std::bind(&core::CurlStack::set_max_active, httpStack, std::placeholders::_2));
   CMD2_ANY         ("network.http.proxy_address",         std::bind(&core::CurlStack::http_proxy, httpStack));
