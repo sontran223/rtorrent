@@ -674,7 +674,7 @@ void XmlRpc::cleanup() {}
 void XmlRpc::insert_command(__UNUSED const char* name, __UNUSED const char* parm, __UNUSED const char* doc) {}
 void XmlRpc::set_dialect(__UNUSED int dialect) {}
 
-bool XmlRpc::process(__UNUSED const char* inBuffer, __UNUSED uint32_t length, __UNUSED slot_write slotWrite) { return false; }
+bool XmlRpc::process(__UNUSED const char* inBuffer, __UNUSED uint32_t length, __UNUSED slot_write slotWrite, bool trusted) { return false; }
 
 int64_t XmlRpc::size_limit() { return 0; }
 void    XmlRpc::set_size_limit(uint64_t size) {}
