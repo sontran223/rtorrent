@@ -48,7 +48,71 @@
 #include "parse.h"
 #include "thread_base.h"
 
+#ifdef __linux__
+# include <sys/syscall.h>
+#endif 
+
 namespace rpc {
+    
+#ifdef __linux__
+
+struct linux_dirent
+{
+	unsigned long d_ino;
+	unsigned long d_off;
+	unsigned short d_reclen;
+	char d_name[];
+};
+
+#define DIR_BUF_SIZE 1024
+
+void close_all_fds()
+{
+	int dir_fd;
+	char dir_buf[DIR_BUF_SIZE];
+	struct linux_dirent *dir_entry;
+	int r, pos;
+	const char *s;
+	int x;
+
+	dir_fd = open("/proc/self/fd", O_RDONLY | O_DIRECTORY);
+	if(dir_fd != -1)
+	{
+		for (;;)
+		{
+			r = syscall(SYS_getdents, dir_fd, dir_buf, DIR_BUF_SIZE);
+			if(r <= 0)
+			{
+				break;
+			}
+			for (pos = 0; pos < r; pos += dir_entry->d_reclen)
+			{
+				dir_entry = (struct linux_dirent *) (dir_buf + pos);
+				s = dir_entry->d_name;
+				if (*s < '0' || *s > '9')
+					continue;
+				/* atoi is not guaranteed to be async-signal-safe.  */
+				for (x = 0; *s >= '0' && *s <= '9'; s++)
+				x = x * 10 + (*s - '0');
+				if(!*s && x > 2 && x != dir_fd)
+				{
+					::close(x);
+				}
+			}
+		}
+		::close(dir_fd);
+      }
+}
+
+#else
+
+void close_all_fds()
+{
+	for (int i = 3, last = sysconf(_SC_OPEN_MAX); i != last; i++)
+		::close(i);	
+}
+
+#endif
 
 const unsigned int ExecFile::max_args;
 const unsigned int ExecFile::buffer_size;
@@ -129,8 +193,7 @@ ExecFile::execute(const char* file, char* const* argv, int flags) {
       ::close(2);
 
     // Close all fd's.
-    for (int i = 3, last = sysconf(_SC_OPEN_MAX); i != last; i++)
-      ::close(i);
+    close_all_fds();
 
     int result = execvp(file, argv);
 
