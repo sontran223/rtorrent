@@ -547,6 +547,13 @@ static std::vector<std::string> untrusted_commands =
 	"schedule",
 	"schedule2",
 	"import",
+	"log.open_file",
+	"log.add_output",
+	"log.execute",
+	"log.vmmap.dump",
+	"log.xmlrpc",
+	"log.libtorrent",
+	"file.append",
 // old commands
 	"execute_capture",
 	"execute_capture_nothrow",
