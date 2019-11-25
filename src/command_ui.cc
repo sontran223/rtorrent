@@ -39,6 +39,8 @@
 #include <sys/types.h>
 
 #include <ctime>
+#include <regex>
+
 #include <rak/algorithm.h>
 #include <rak/functional.h>
 #include <rak/functional_fun.h>
@@ -367,6 +369,53 @@ apply_compare(rpc::target_type target, const torrent::Object::list_type& args) {
 
   // if all else is equal, ensure stable sort order based on memory location
   return (int64_t) (target.second < target.third);
+}
+
+// Regexp based 'match' function.
+// arg1: the text to match.
+// arg2: the regexp pattern.
+// eg: match{d.name=,.*linux.*iso}
+torrent::Object apply_match(rpc::target_type target, const torrent::Object::list_type& args) {
+  if (args.size() != 2)
+    throw torrent::input_error("Wrong argument count for 'match': 2 arguments needed.");
+
+  // This really should be converted to using args flagged as
+  // commands, so that we can compare commands and statics values.
+
+  torrent::Object result1;
+  torrent::Object result2;
+
+  rpc::target_type target1 = rpc::is_target_pair(target) ? rpc::get_target_left(target) : target;
+  rpc::target_type target2 = rpc::is_target_pair(target) ? rpc::get_target_right(target) : target;
+
+  if (args.front().is_dict_key())
+    result1 = rpc::commands.call_command(args.front().as_dict_key().c_str(), args.front().as_dict_obj(), target1);
+  else
+    result1 = rpc::parse_command_single(target1, args.front().as_string());
+
+  if (args.back().is_dict_key())
+    result2 = rpc::commands.call_command(args.back().as_dict_key().c_str(), args.back().as_dict_obj(), target2);
+  else
+    result2 = args.back().as_string();
+
+  if (result1.type() != result2.type())
+    throw torrent::input_error("Type mismatch for 'match' arguments.");
+
+  std::string text = result1.as_string();
+  std::string pattern = result2.as_string();
+
+  std::transform(text.begin(), text.end(), text.begin(), ::tolower);
+  std::transform(pattern.begin(), pattern.end(), pattern.begin(), ::tolower);
+
+  bool isAMatch = false;
+  try {
+    std::regex re(pattern);
+    isAMatch = std::regex_match(text, re);
+  } catch (const std::regex_error& exc) {
+    control->core()->push_log_std("regex_error: " + std::string(exc.what()));
+  }
+
+  return isAMatch ? (int64_t)true : (int64_t)false;
 }
 
 torrent::Object
@@ -728,6 +777,26 @@ apply_arith_other(const char* op, const torrent::Object::list_type& args) {
   }
 }
 
+torrent::Object
+cmd_status_throttle_names(bool up, const torrent::Object::list_type& args) {
+  if (args.size() == 0)
+    return torrent::Object();
+
+  std::vector<std::string> throttle_name_list;
+
+  for (torrent::Object::list_const_iterator itr = args.begin(), last = args.end(); itr != last; itr++) {
+    if (itr->is_string())
+      throttle_name_list.push_back(itr->as_string());
+  }
+
+  if (up)
+    control->ui()->set_status_throttle_up_names(throttle_name_list);
+  else
+    control->ui()->set_status_throttle_down_names(throttle_name_list);
+
+  return torrent::Object();
+}
+
 void
 initialize_command_ui() {
   CMD2_VAR_STRING("keys.layout", "qwerty");
@@ -737,8 +806,11 @@ initialize_command_ui() {
   CMD2_ANY_L   ("view.list",          std::bind(&apply_view_list));
   CMD2_ANY_LIST("view.set",           std::bind(&apply_view_set, std::placeholders::_2));
 
-  CMD2_ANY_LIST("view.filter",        std::bind(&apply_view_event, &core::ViewManager::set_filter, std::placeholders::_2));
-  CMD2_ANY_LIST("view.filter_on",     std::bind(&apply_view_filter_on, std::placeholders::_2));
+  CMD2_ANY_LIST  ("view.filter",      std::bind(&apply_view_event, &core::ViewManager::set_filter, std::placeholders::_2));
+  CMD2_ANY_LIST  ("view.filter_on",   std::bind(&apply_view_filter_on, std::placeholders::_2));
+  CMD2_ANY_LIST  ("view.filter.temp", std::bind(&apply_view_event, &core::ViewManager::set_filter_temp, std::placeholders::_2));
+  CMD2_VAR_STRING("view.filter.temp.excluded", "default,started,stopped");
+  CMD2_VAR_BOOL  ("view.filter.temp.log", 0);
 
   CMD2_ANY_LIST("view.sort",          std::bind(&apply_view_sort, std::placeholders::_2));
   CMD2_ANY_LIST("view.sort_new",      std::bind(&apply_view_event, &core::ViewManager::set_sort_new, std::placeholders::_2));
@@ -772,6 +844,9 @@ initialize_command_ui() {
   CMD2_VAR_VALUE ("ui.throttle.global.step.medium", 50);
   CMD2_VAR_VALUE ("ui.throttle.global.step.large",  500);
 
+  CMD2_ANY_LIST  ("ui.status.throttle.up.set",   std::bind(&cmd_status_throttle_names, true, std::placeholders::_2));
+  CMD2_ANY_LIST  ("ui.status.throttle.down.set", std::bind(&cmd_status_throttle_names, false, std::placeholders::_2));
+
   // TODO: Add 'option_string' for rtorrent-specific options.
   CMD2_VAR_STRING("ui.torrent_list.layout", "full");
 
@@ -794,6 +869,7 @@ initialize_command_ui() {
   CMD2_ANY_LIST("greater", &apply_greater);
   CMD2_ANY_LIST("equal",   &apply_equal);
   CMD2_ANY_LIST("compare", &apply_compare);
+  CMD2_ANY_LIST("match",   &apply_match);
 
   CMD2_ANY_VALUE("convert.gm_time",      std::bind(&apply_to_time, std::placeholders::_2, 0));
   CMD2_ANY_VALUE("convert.gm_date",      std::bind(&apply_to_time, std::placeholders::_2, 0x2));

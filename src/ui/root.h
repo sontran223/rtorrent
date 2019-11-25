@@ -37,7 +37,7 @@
 #ifndef RTORRENT_UI_ROOT_H
 #define RTORRENT_UI_ROOT_H
 
-#include <inttypes.h>
+#include <cstdint>
 #include "input/bindings.h"
 #include "download_list.h"
 
@@ -58,6 +58,8 @@ namespace input {
 namespace ui {
 
 class DownloadList;
+
+typedef std::vector<std::string> ThrottleNameList;
 
 class Root {
 public:
@@ -92,6 +94,12 @@ public:
   void                adjust_up_throttle(int throttle);
 
   const char*         get_throttle_keys();
+
+  ThrottleNameList&   get_status_throttle_up_names()          { return m_throttle_up_names; }
+  ThrottleNameList&   get_status_throttle_down_names()        { return m_throttle_down_names; }
+
+  void                set_status_throttle_up_names(const ThrottleNameList& throttle_list)      { m_throttle_up_names = throttle_list; }
+  void                set_status_throttle_down_names(const ThrottleNameList& throttle_list)    { m_throttle_down_names = throttle_list; }
 
   void                enable_input(const std::string& title, input::TextInput* input, ui::DownloadList::Input type);
   void                disable_input();
@@ -129,6 +137,9 @@ private:
   void                next_in_input_history(ui::DownloadList::Input type);
 
   void                reset_input_history_attributes(ui::DownloadList::Input type);
+
+  ThrottleNameList    m_throttle_up_names;
+  ThrottleNameList    m_throttle_down_names;
 };
 
 }

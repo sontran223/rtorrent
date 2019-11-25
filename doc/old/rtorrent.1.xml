@@ -122,7 +122,7 @@ View download.
 	</varlistentry>
 
 	<varlistentry>
-	  <term>1 - 7</term>
+	  <term>0 - 9</term>
 	  <listitem><para>
 Change view.
           </para></listitem>
@@ -222,6 +222,13 @@ Delete the file the torrent is tied to, and clear the association.
           <term>I</term>
           <listitem><para>
 Toggle whether torrent ignores ratio settings.
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>F</term>
+          <listitem><para>
+Add a temporary name based regex filter to the current view.
           </para></listitem>
         </varlistentry>
 
