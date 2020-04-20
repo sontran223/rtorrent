@@ -202,7 +202,10 @@ ExecFile::execute(const char* file, char* const* argv, int flags) {
 
   // We yield the global lock when waiting for the executed command to
   // finish so that XMLRPC and other threads can continue working.
-  ThreadBase::release_global_lock();
+  if (!(flags & flag_capture))
+  {
+    ThreadBase::release_global_lock();
+  }
 
   if (flags & flag_capture) {
     m_capture = std::string();
@@ -233,8 +236,10 @@ ExecFile::execute(const char* file, char* const* argv, int flags) {
     wpid = waitpid(childPid, &status, 0);
   } while (wpid == -1 && rak::error_number::current().value() == rak::error_number::e_intr);
 
-  ThreadBase::acquire_global_lock();
-
+  if (!(flags & flag_capture))
+  {
+    ThreadBase::acquire_global_lock();
+  }
   if (wpid != childPid)
     throw torrent::internal_error("ExecFile::execute(...) waitpid failed.");
 
