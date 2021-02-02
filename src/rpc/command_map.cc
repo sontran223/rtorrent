@@ -165,6 +165,9 @@ const CommandMap::mapped_type
 CommandMap::call_command(key_type key, const mapped_type& arg, target_type target) {
   iterator itr = base_type::find(key);
 
+  if( !rpc::XmlRpc::is_command_enabled( key ) )
+    throw torrent::input_error("Command \"" + std::string(key) + "\" is not enabled for untrusted connections.");
+
   if (itr == base_type::end())
     throw torrent::input_error("Command \"" + std::string(key) + "\" does not exist.");
 

@@ -581,13 +581,23 @@ static std::vector<std::string> untrusted_commands =
 	"on_finished"
 };
 
+thread_local bool XmlRpc::trustedXmlConnection = true;
+
+bool XmlRpc::is_command_enabled( const char* const methodName )
+{
+	return( trustedXmlConnection ||
+		(std::find(untrusted_commands.begin(), untrusted_commands.end(), methodName) == untrusted_commands.end()) );
+}
+
 void xmlrpc_check_command(xmlrpc_env* const envP,
 	const char* const methodName,
 	xmlrpc_value* const paramArrayP,
 	void* const userData)
 {
-	if(std::find(untrusted_commands.begin(), untrusted_commands.end(), methodName) != untrusted_commands.end())
+	if( !XmlRpc::is_command_enabled( methodName ) )
+	{
 		xmlrpc_faultf(envP, "Command '%s' is not enabled for untrusted connections", methodName);
+	}
 }
 
 bool
@@ -595,7 +605,9 @@ XmlRpc::process(const char* inBuffer, uint32_t length, slot_write slotWrite, boo
   xmlrpc_env localEnv;
   xmlrpc_env_init(&localEnv);
 
-  xmlrpc_registry_set_preinvoke_method(&localEnv, (xmlrpc_registry*)m_registry, 
+  trustedXmlConnection = trusted;
+
+  xmlrpc_registry_set_preinvoke_method(&localEnv, (xmlrpc_registry*)m_registry,
     (xmlrpc_preinvoke_method) (trusted ? NULL : &xmlrpc_check_command), NULL);
   xmlrpc_mem_block* memblock = xmlrpc_registry_process_call(&localEnv, (xmlrpc_registry*)m_registry, NULL, inBuffer, length);
 
@@ -607,6 +619,9 @@ XmlRpc::process(const char* inBuffer, uint32_t length, slot_write slotWrite, boo
 
   xmlrpc_mem_block_free(memblock);
   xmlrpc_env_clean(&localEnv);
+
+  trustedXmlConnection = true;
+
   return result;
 }
 

@@ -95,6 +95,7 @@ public:
 
   static int64_t      size_limit();
   static void         set_size_limit(uint64_t size);
+  static bool         is_command_enabled( const char* const methodName );
 
 private:
   void*               m_env;
@@ -106,6 +107,8 @@ private:
   slot_file           m_slotFindFile;
   slot_tracker        m_slotFindTracker;
   slot_peer           m_slotFindPeer;
+
+  thread_local static bool trustedXmlConnection;
 };
 
 }
