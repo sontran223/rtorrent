@@ -96,6 +96,7 @@ public:
   static int64_t      size_limit();
   static void         set_size_limit(uint64_t size);
   static bool         is_command_enabled( const char* const methodName );
+  static bool         set_trusted_connection( bool enabled );
 
 private:
   void*               m_env;

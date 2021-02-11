@@ -583,6 +583,13 @@ static std::vector<std::string> untrusted_commands =
 
 thread_local bool XmlRpc::trustedXmlConnection = true;
 
+bool XmlRpc::set_trusted_connection( bool enabled )
+{
+	bool ret = XmlRpc::trustedXmlConnection;
+	XmlRpc::trustedXmlConnection = enabled;
+	return(ret);
+}
+
 bool XmlRpc::is_command_enabled( const char* const methodName )
 {
 	return( trustedXmlConnection ||
