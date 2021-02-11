@@ -547,6 +547,7 @@ static std::vector<std::string> untrusted_commands =
 	"schedule",
 	"schedule2",
 	"import",
+	"try_import",
 	"log.open_file",
 	"log.add_output",
 	"log.execute",
