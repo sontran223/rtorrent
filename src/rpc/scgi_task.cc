@@ -162,7 +162,8 @@ SCgiTask::event_read() {
     if (*contentPos != '\0' || contentSize <= 0 || contentSize > max_content_size)
       goto event_read_failed;
 
-    m_trusted = (memstr(current,"UNTRUSTED_CONNECTION",headerSize)==NULL);
+    char* connectionPos = memstr(current,"UNTRUSTED_CONNECTION",headerSize);
+    m_trusted = connectionPos && (*(connectionPos + 21) == '0');
 
     m_body = current + headerSize + 1;
     headerSize = std::distance(m_buffer, m_body);

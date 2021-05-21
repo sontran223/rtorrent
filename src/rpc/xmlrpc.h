@@ -81,7 +81,7 @@ public:
   void                initialize();
   void                cleanup();
 
-  bool                process(const char* inBuffer, uint32_t length, slot_write slotWrite, bool trusted = true);
+  bool                process(const char* inBuffer, uint32_t length, slot_write slotWrite, bool trusted = false);
 
   void                insert_command(const char* name, const char* parm, const char* doc);
 
