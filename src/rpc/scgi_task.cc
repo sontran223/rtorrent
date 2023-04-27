@@ -78,6 +78,19 @@ SCgiTask::close() {
   //   control->core()->push_log(std::string(buffer));
 }
 
+char* memstr(char* haystack, char* needle, int size)
+{
+	char* p;
+	char needlesize = strlen(needle);
+
+	for(p = haystack; p <= (haystack-needlesize+size); p++)
+	{
+		if(memcmp(p, needle, needlesize) == 0)
+			return(p);
+	}
+	return(NULL);
+}
+
 void
 SCgiTask::event_read() {
   int bytes =
@@ -132,6 +145,9 @@ SCgiTask::event_read() {
     if (*contentPos != '\0' || contentSize <= 0)
       goto event_read_failed;
 
+    char* connectionPos = memstr(current,(char*)"UNTRUSTED_CONNECTION",headerSize);
+    m_trusted = connectionPos && (*(connectionPos + 21) == '0');
+	
     // RFC 3875, 4.1.3
     const auto contentTypePos = header.find("CONTENT_TYPE");
     if (contentTypePos != std::string_view::npos) {
@@ -206,7 +222,7 @@ SCgiTask::event_read() {
 
   // Close if the call failed, else stay open to write back data.
   if (!m_parent->receive_call(
-        this, m_body, m_bufferSize - std::distance(m_buffer, m_body)))
+        this, m_body, m_bufferSize - std::distance(m_buffer, m_body), m_trusted))
     close();
 
   return;

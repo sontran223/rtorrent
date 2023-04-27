@@ -573,11 +573,27 @@ RpcXml::cleanup() {
   delete (xmlrpc_env*)m_env;
 }
 
+void xmlrpc_check_command(xmlrpc_env* const envP,
+	const char* const methodName,
+	xmlrpc_value* const paramArrayP,
+	void* const userData)
+{
+	if( !rpc.is_command_enabled( methodName ) )
+	{
+		xmlrpc_faultf(envP, "Command '%s' is not enabled for untrusted connections", methodName);
+	}
+  // Fix warning unused
+  (void) paramArrayP;
+  (void) userData;
+}
+
 bool
-RpcXml::process(const char* inBuffer, uint32_t length, res_callback callback) {
+RpcXml::process(const char* inBuffer, uint32_t length, res_callback callback, bool trusted) {
   xmlrpc_env localEnv;
   xmlrpc_env_init(&localEnv);
 
+  xmlrpc_registry_set_preinvoke_method(&localEnv, (xmlrpc_registry*)m_registry,
+    (xmlrpc_preinvoke_method) (trusted ? nullptr : &xmlrpc_check_command), nullptr);
   xmlrpc_mem_block* memblock = xmlrpc_registry_process_call(
     &localEnv, (xmlrpc_registry*)m_registry, nullptr, inBuffer, length);
 

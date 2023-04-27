@@ -1,36 +1,35 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2005-2011, Jari Sundell <jaris@ifi.uio.no>
 
-#include <cstdio>
+#include <functional>
 #include <filesystem>
 #include <fstream>
-#include <functional>
+#include <cstdio>
 #include <limits>
 #include <torrent/common.h>
 #include <unistd.h>
-
+#include <torrent/utils/address_info.h>
+#include <torrent/utils/path.h>
 #include <torrent/connection_manager.h>
-#include <torrent/data/file_manager.h>
-#include <torrent/download/resource_manager.h>
-#include <torrent/rate.h>
-#include <torrent/torrent.h>
 #include <torrent/tracker.h>
 #include <torrent/tracker_list.h>
-#include <torrent/utils/address_info.h>
+#include <torrent/torrent.h>
+#include <torrent/rate.h>
+#include <torrent/data/file_manager.h>
+#include <torrent/download/resource_manager.h>
 #include <torrent/utils/log.h>
 #include <torrent/utils/option_strings.h>
-#include <torrent/utils/path.h>
 
 #include "core/download.h"
 #include "core/manager.h"
-#include "rpc/parse.h"
-#include "rpc/parse_commands.h"
 #include "rpc/scgi.h"
 #include "ui/root.h"
+#include "rpc/parse.h"
+#include "rpc/parse_commands.h"
 
-#include "command_helpers.h"
-#include "control.h"
 #include "globals.h"
+#include "control.h"
+#include "command_helpers.h"
 
 torrent::Object
 apply_encryption(const torrent::Object::list_type& args) {
@@ -396,4 +395,19 @@ initialize_command_network() {
 
   CMD2_REDIRECT_GENERIC("network.xmlrpc.dialect.set", "true");
   CMD2_REDIRECT_GENERIC("network.xmlrpc.size_limit.set", "true");
+  // TODO configured libtorrent was not support for following commands yet
+  /*CMD2_ANY("network.block.ipv4",
+           [cm](const auto&, const auto&) { return cm->is_block_ipv4(); });
+  CMD2_ANY_VALUE_V("network.block.ipv4.set",
+           [cm](const auto&, const auto& v) { return cm->set_block_ipv4(v); });
+  CMD2_ANY("network.block.ipv6",
+           [cm](const auto&, const auto&) { return cm->is_block_ipv6(); });
+  CMD2_ANY_VALUE_V("network.block.ipv6.set",
+           [cm](const auto&, const auto& v) { return cm->set_block_ipv6(v); });
+
+  CMD2_ANY("network.prefer.ipv6",
+           [cm](const auto&, const auto&) { return cm->is_prefer_ipv6(); });
+  CMD2_ANY_VALUE_V("network.prefer.ipv6.set",
+           [cm](const auto&, const auto& v) { return cm->set_prefer_ipv6(v); });
+  */
 }

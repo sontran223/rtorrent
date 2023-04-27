@@ -148,7 +148,7 @@ SCgi::event_error() {
 }
 
 bool
-SCgi::receive_call(SCgiTask* task, const char* buffer, uint32_t length) {
+SCgi::receive_call(SCgiTask* task, const char* buffer, uint32_t length, bool trusted) {
   bool       result   = false;
   const auto callback = [task](const char* buffer, uint32_t length) {
     return task->receive_write(buffer, length);
@@ -157,13 +157,13 @@ SCgi::receive_call(SCgiTask* task, const char* buffer, uint32_t length) {
   switch (task->type()) {
     case SCgiTask::ContentType::JSON:
       result =
-        rpc.dispatch(RpcManager::RPCType::JSON, buffer, length, callback);
+        rpc.dispatch(RpcManager::RPCType::JSON, buffer, length, callback, trusted);
       break;
     case SCgiTask::ContentType::XML:
     default:
       torrent::thread_base::acquire_global_lock();
       torrent::main_thread()->interrupt();
-      result = rpc.dispatch(RpcManager::RPCType::XML, buffer, length, callback);
+      result = rpc.dispatch(RpcManager::RPCType::XML, buffer, length, callback, trusted);
       torrent::thread_base::release_global_lock();
   }
 

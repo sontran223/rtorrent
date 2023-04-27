@@ -287,7 +287,8 @@ RpcJson::is_valid() const {
 }
 
 bool
-RpcJson::process(const char* inBuffer, uint32_t length, res_callback callback) {
+RpcJson::process(const char* inBuffer, uint32_t length, res_callback callback, bool trusted) {
+  (void) trusted; // TODO check to not handle untrusted request
   const std::string& response =
     m_jsonrpc->HandleRequest(std::string_view(inBuffer, length));
 

@@ -25,7 +25,8 @@ public:
 
   bool process(const char*  inBuffer,
                uint32_t     length,
-               res_callback callback) override;
+               res_callback callback,
+               bool trusted = false) override;
 
   void insert_command(const char* name,
                       const char* parm,

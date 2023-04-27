@@ -30,7 +30,8 @@ public:
   bool dispatch(RPCType            type,
                 const char*        inBuffer,
                 uint32_t           length,
-                IRpc::res_callback callback);
+                IRpc::res_callback callback,
+                bool               trusted);
 
   void initialize(slot_download fun_d,
                   slot_file     fun_f,
@@ -42,7 +43,9 @@ public:
   void cleanup();
 
   void insert_command(const char* name, const char* parm, const char* doc);
-
+  bool is_command_enabled( const char* const methodName );
+  bool set_trusted_connection( bool enabled );
+  
   const slot_download& slot_find_download() const {
     return m_slotFindDownload;
   }
@@ -65,6 +68,7 @@ private:
   slot_file     m_slotFindFile;
   slot_tracker  m_slotFindTracker;
   slot_peer     m_slotFindPeer;
+  thread_local static bool trustedXmlConnection;
 };
 }
 

@@ -1,3 +1,7 @@
+#include "test/rpc/test_parse_options.h"
+
+#include "test/helpers/assert.h"
+
 #include <array>
 #include <torrent/connection_manager.h>
 #include <torrent/exceptions.h>
@@ -5,8 +9,6 @@
 #include <torrent/utils/option_strings.h>
 
 #include "rpc/parse_options.h"
-#include "test/helpers/assert.h"
-#include "test/rpc/test_parse_options.h"
 
 static constexpr int flag_1 = 1 << 0;
 static constexpr int flag_2 = 1 << 1;

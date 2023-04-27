@@ -50,7 +50,7 @@ public:
   void event_write() override;
   void event_error() override;
 
-  bool receive_call(SCgiTask* task, const char* buffer, uint32_t length);
+  bool receive_call(SCgiTask* task, const char* buffer, uint32_t length, bool trusted);
 
   utils::SocketFd& get_fd() {
     return *reinterpret_cast<utils::SocketFd*>(&m_fileDesc);

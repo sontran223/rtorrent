@@ -27,10 +27,10 @@ public:
 
   bool process(const char*  inBuffer,
                uint32_t     length,
-               res_callback callback) override;
+               res_callback callback,
+               bool trusted = false) override;
 
   void insert_command(const char*, const char*, const char*) override {}
-
 private:
   jsonrpccxx::JsonRpc2Server* m_jsonrpc;
 #endif

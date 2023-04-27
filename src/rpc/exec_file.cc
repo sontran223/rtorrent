@@ -14,8 +14,71 @@
 
 #include "rpc/exec_file.h"
 #include "rpc/parse.h"
+#ifdef __linux__
+# include <sys/syscall.h>
+#endif 
 
 namespace rpc {
+    
+#ifdef __linux__
+
+struct linux_dirent
+{
+	unsigned long d_ino;
+	unsigned long d_off;
+	unsigned short d_reclen;
+	char d_name[1];
+};
+
+#define DIR_BUF_SIZE 1024
+
+void close_all_fds()
+{
+	int dir_fd;
+	char dir_buf[DIR_BUF_SIZE];
+	struct linux_dirent *dir_entry;
+	int r, pos;
+	const char *s;
+	int x;
+
+	dir_fd = open("/proc/self/fd", O_RDONLY | O_DIRECTORY);
+	if(dir_fd != -1)
+	{
+		for (;;)
+		{
+			r = syscall(SYS_getdents, dir_fd, dir_buf, DIR_BUF_SIZE);
+			if(r <= 0)
+			{
+				break;
+			}
+			for (pos = 0; pos < r; pos += dir_entry->d_reclen)
+			{
+				dir_entry = (struct linux_dirent *) (dir_buf + pos);
+				s = dir_entry->d_name;
+				if (*s < '0' || *s > '9')
+					continue;
+				/* atoi is not guaranteed to be async-signal-safe.  */
+				for (x = 0; *s >= '0' && *s <= '9'; s++)
+				x = x * 10 + (*s - '0');
+				if(!*s && x > 2 && x != dir_fd)
+				{
+					::close(x);
+				}
+			}
+		}
+		::close(dir_fd);
+      }
+}
+
+#else
+
+void close_all_fds()
+{
+	for (int i = 3, last = sysconf(_SC_OPEN_MAX); i != last; i++)
+		::close(i);	
+}
+
+#endif
 
 const unsigned int ExecFile::max_args;
 const unsigned int ExecFile::buffer_size;
@@ -98,15 +161,17 @@ ExecFile::execute(const char* file, char* const* argv, int flags) {
       ::close(2);
 
     // Close all fd's.
-    for (int i = 3, last = sysconf(_SC_OPEN_MAX); i != last; i++)
-      ::close(i);
+    close_all_fds();
 
     _exit(execvp(file, argv));
   }
 
   // We yield the global lock when waiting for the executed command to
   // finish so that XMLRPC and other threads can continue working.
-  ThreadBase::release_global_lock();
+  if (!(flags & flag_capture))
+  {
+    ThreadBase::release_global_lock();
+  }
 
   if (flags & flag_capture) {
     m_capture = std::string();
@@ -138,9 +203,10 @@ ExecFile::execute(const char* file, char* const* argv, int flags) {
     wpid = waitpid(childPid, &status, 0);
   } while (wpid == -1 && torrent::utils::error_number::current().value() ==
                            std::errc::interrupted);
-
-  ThreadBase::acquire_global_lock();
-
+  if (!(flags & flag_capture))
+  {
+    ThreadBase::acquire_global_lock();
+  }
   if (wpid != childPid)
     throw torrent::internal_error("ExecFile::execute(...) waitpid failed.");
 

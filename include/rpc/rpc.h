@@ -33,7 +33,7 @@ public:
     return false;
   };
 
-  virtual bool process(const char*, uint32_t, res_callback) {
+  virtual bool process(const char*, uint32_t, res_callback, bool trusted = false) {
     throw torrent::internal_error("RPC request not dispatched.");
   }
 

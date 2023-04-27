@@ -1,21 +1,25 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2005-2011, Jari Sundell <jaris@ifi.uio.no>
 
+#include <torrent/download/resource_manager.h>
 #include <torrent/download/choke_group.h>
 #include <torrent/download/choke_queue.h>
-#include <torrent/download/resource_manager.h>
+#include <torrent/utils/log.h>
 #include <torrent/utils/option_strings.h>
 
+#include "ui/root.h"
 #include "rpc/parse.h"
 #include "rpc/parse_commands.h"
-#include "ui/root.h"
 
-#include "command_helpers.h"
-#include "control.h"
 #include "globals.h"
+#include "control.h"
+#include "command_helpers.h"
 
 // For cg_d_group.
 #include "core/download.h"
+
+#define LT_LOG_SUBSYSTEM(log_fmt, ...)                                  \
+  lt_log_print_subsystem(torrent::LOG_TORRENT_INFO, "choke_queue", log_fmt, __VA_ARGS__);
 
 // A hack to allow testing of the new choke_group API without the
 // working parts present.
@@ -97,6 +101,22 @@ apply_cg_insert(const std::string& arg) {
   return torrent::Object();
 }
 
+torrent::Object
+apply_cg_all_update_balance(bool is_up) {
+  LT_LOG_SUBSYSTEM("apply update balance: resource_manager is_up:%i", (int)is_up);
+
+  for (torrent::ResourceManager::group_iterator
+         itr = torrent::resource_manager()->group_begin(),
+         last = torrent::resource_manager()->group_end(); itr != last; itr++) {
+    if (is_up)
+      itr->up_queue()->balance();
+    else
+      itr->down_queue()->balance();
+  }
+
+  return torrent::Object();
+}
+
 //
 // The hacked version:
 //
@@ -173,6 +193,11 @@ apply_cg_list() {
   return torrent::Object::from_list(result);
 }
 
+int
+cg_get_can_unchoke(torrent::choke_queue* cq) {
+  return cq->max_unchoked_signed() - (int)cq->size_unchoked();
+}
+
 torrent::Object
 apply_cg_insert(const std::string& arg) {
   int64_t dummy;
@@ -210,6 +235,20 @@ apply_cg_index_of(const std::string& arg) {
     throw torrent::input_error("Choke group not found.");
 
   return std::distance(cg_list_hack.begin(), itr);
+}
+
+torrent::Object
+apply_cg_all_update_balance(bool is_up) {
+  LT_LOG_SUBSYSTEM("apply update balance: hack is_up:%i", (int)is_up);
+
+  for (auto itr : cg_list_hack) {
+    if (is_up)
+      itr->up_queue()->balance();
+    else
+      itr->down_queue()->balance();
+  }
+
+  return torrent::Object();
 }
 
 //
@@ -373,6 +412,11 @@ initialize_command_groups() {
                 [](const auto&, const auto& args) {
                   return apply_cg_tracker_mode_set(args);
                 });
+				
+  CMD2_ANY("choke_group.all.up.update_balance",
+           [](const auto&, const auto&) { return apply_cg_all_update_balance(true); });
+  CMD2_ANY("choke_group.all.down.update_balance",
+           [](const auto&, const auto&) { return apply_cg_all_update_balance(false); });
 
   CMD2_ANY("choke_group.up.rate", [](const auto&, const auto& raw_args) {
     return cg_get_group(raw_args)->up_rate();

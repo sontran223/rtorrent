@@ -8,23 +8,25 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <inttypes.h>
 #include <iostream>
 #include <queue>
 #include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <inttypes.h>
 #include <unistd.h>
 
-#include <torrent/buildinfo.h>
-#include <torrent/data/chunk_utils.h>
-#include <torrent/exceptions.h>
 #include <torrent/http.h>
-#include <torrent/poll.h>
 #include <torrent/torrent.h>
-#include <torrent/utils/error_number.h>
+#include <torrent/buildinfo.h>
+#include <torrent/exceptions.h>
+
+#include <torrent/poll.h>
+
+#include <torrent/data/chunk_utils.h>
 #include <torrent/utils/log.h>
+#include <torrent/utils/error_number.h>
 
 #ifdef LT_HAVE_BACKTRACE
 #include <execinfo.h>
@@ -37,8 +39,9 @@
 #include "core/manager.h"
 #include "core/view_manager.h"
 #include "display/canvas.h"
-#include "display/manager.h"
 #include "display/window.h"
+#include "display/manager.h"
+
 #include "input/bindings.h"
 #include "ui/root.h"
 
@@ -47,12 +50,12 @@
 #include "rpc/parse_commands.h"
 #include "utils/directory.h"
 #include "utils/indicators.h"
-
-#include "command_helpers.h"
 #include "control.h"
+#include "command_helpers.h"
+
 #include "globals.h"
-#include "option_parser.h"
 #include "signal_handler.h"
+#include "option_parser.h"
 
 #include "thread_worker.h"
 

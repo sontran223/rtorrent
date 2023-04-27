@@ -23,6 +23,7 @@ public:
 
   SCgiTask() {
     m_fileDesc = -1;
+    m_trusted = false;
   }
 
   ContentType type() const {
@@ -61,6 +62,7 @@ private:
   char* m_buffer;
   char* m_position;
   char* m_body;
+  bool  m_trusted;
 
   unsigned int m_bufferSize;
 };
