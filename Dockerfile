@@ -1,4 +1,5 @@
-ARG ALPINE_IMAGE=alpine:edge
+# TODO: Need to update libtorrent to support alpine:edge
+ARG ALPINE_IMAGE=alpine:3.16
 
 FROM ${ALPINE_IMAGE} as build
 
@@ -18,7 +19,8 @@ RUN apk --no-cache add \
     pythonispython3 \
     python3 \
     rpm
-
+RUN gcc --version
+RUN g++ --version
 RUN rpm --initdb
 
 # Checkout rTorrent sources from current directory
