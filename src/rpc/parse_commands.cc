@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <fstream>
 #include <string>
+#include <functional>
 #include <torrent/exceptions.h>
 #include <torrent/utils/path.h>
 
@@ -16,13 +17,14 @@ CommandMap commands;
 RpcManager rpc;
 ExecFile   execFile;
 
-struct command_map_is_space : std::unary_function<char, bool> {
+using command_map_type = std::function<bool(char)>;
+struct command_map_is_space : command_map_type {
   bool operator()(char c) const {
     return c == ' ' || c == '\t';
   }
 };
 
-struct command_map_is_newline : std::unary_function<char, bool> {
+struct command_map_is_newline : command_map_type {
   bool operator()(char c) const {
     return c == '\n' || c == '\0' || c == ';';
   }
